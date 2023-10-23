@@ -1,0 +1,145 @@
+openapi: 3.0.0
+info:
+  title: Events API Specification
+  description: API specification for Events API
+  version: 1.0.0
+  contact:
+    name: HostelWorld
+    email: dev@hostelworld.com
+
+servers:
+  - url: http://localhost:8000
+
+tags:
+  - name: events
+    description: Events API endpoints
+
+paths:
+  /:
+    get:
+      x-visibility: public
+      tags:
+        - events
+      operationId: fetchEvents
+      summary: Fetch events
+      description: Fetch events filtered by term and date
+      parameters:
+        - name: term
+          in: query
+          schema:
+            type: string
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Success
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/PagedEvents"
+        '400':
+          description: Bad request
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/ErrorMessageDto"
+        '422':
+          description: Validation error
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/ErrorMessageDto"
+        "500":
+          description: Server error
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/ErrorMessageDto"
+
+
+components:
+  schemas:
+    PositiveInteger:
+      minimum: 0
+      type: integer
+      format: int32
+      description: Positive integer
+      
+    ErrorMessageDto:
+      description: Error message object.
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+          example: UNKNOWN_ERROR
+        message:
+          type: string
+          description: Descriptive error message
+          example: Request could not be completed due to an error
+        data:
+          type: object
+          description: Additional data for this error message.
+          additionalProperties: true
+          properties: {}
+      required:
+        - message
+
+    Paging:
+      description: Base object for paginated list
+      type: object
+      properties:
+        total:
+          $ref: '#/components/schemas/PositiveInteger'
+        page:
+          $ref: '#/components/schemas/PositiveInteger'
+        size:
+          $ref: '#/components/schemas/PositiveInteger'
+        totalPages:
+          $ref: '#/components/schemas/PositiveInteger'
+      required:
+        - total
+        - page
+        - size
+        - totalPages
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+      required:
+        - id
+        - name
+        - city
+        - country
+        - startDate
+        - endDate
+
+    PagedEvents:
+      allOf:
+        - $ref: '#/components/schemas/Paging'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Event'
+          required:
+            - data
